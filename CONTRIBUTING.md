@@ -82,22 +82,20 @@ import (
     "context"
     "io"
 
-    yup "github.com/gloo-foo/framework"
-    "github.com/gloo-foo/framework/opt"
-    localopt "github.com/yupsh/mycommand/opt"
+    gloo "github.com/gloo-foo/framework"
 )
 
 // Command implementation using StandardCommand abstraction
 type command struct {
-    yup.StandardCommand[localopt.Flags]
+    gloo.StandardCommand[flags]
 }
 
 // Mycommand creates a new command
 // Note: Function name matches package name (capitalized)
-func Mycommand(parameters ...any) yup.Line {
-    args := opt.Args[string, localopt.Flags](parameters...)
+func Mycommand(parameters ...any) gloo.Line {
+    args := opt.Args[string, flags](parameters...)
     return command{
-        StandardCommand: yup.StandardCommand[localopt.Flags]{
+        StandardCommand: gloo.StandardCommand[flags]{
             Positional: args.Positional,
             Flags:      args.Flags,
             Name:       "mycommand",
@@ -105,7 +103,7 @@ func Mycommand(parameters ...any) yup.Line {
     }
 }
 
-func (p command) Executor() yup.LineExecutor {
+func (p command) Executor() gloo.LineExecutor {
 	return func(line int64, stdin string) (stdout string, stderr string, emit bool, err error) {
 		return "", "", false, nil
 	}
@@ -118,7 +116,7 @@ func (p command) Executor() yup.LineExecutor {
 #### For Line Processing Commands
 ```go
 func (c command) processReader(ctx context.Context, reader io.Reader, output io.Writer) error {
-    return yup.ProcessLinesSimple(ctx, reader, output,
+    return gloo.ProcessLinesSimple(ctx, reader, output,
         func(ctx context.Context, lineNum int, line string, output io.Writer) error {
             // Process each line
             fmt.Fprintln(output, processLine(line))
@@ -130,7 +128,7 @@ func (c command) processReader(ctx context.Context, reader io.Reader, output io.
 
 #### For File Processing Commands
 ```go
-func (p command) Executor() yup.LineExecutor {
+func (p command) Executor() gloo.LineExecutor {
 	return func(line int64, stdin string) (stdout string, stderr string, emit bool, err error) {
 		return "", "", false, nil
 	}
@@ -168,9 +166,9 @@ func ExampleMyCommand() {
 
 All commands must support context cancellation:
 
-- Use `yup.ProcessLinesSimple` for line processing
-- Use `yup.ScanWithContext` instead of `scanner.Scan()`
-- Add periodic `yup.CheckContextCancellation(ctx)` in long loops
+- Use `gloo.ProcessLinesSimple` for line processing
+- Use `gloo.ScanWithContext` instead of `scanner.Scan()`
+- Add periodic `gloo.CheckContextCancellation(ctx)` in long loops
 - Test cancellation behavior
 
 ## Memory Patterns
@@ -178,7 +176,7 @@ All commands must support context cancellation:
 ### Good Patterns
 ```go
 // Use streaming processing
-return yup.ProcessLinesSimple(ctx, reader, output, processor)
+return gloo.ProcessLinesSimple(ctx, reader, output, processor)
 
 // Use framework helpers
 if err := c.RequireArgs(1, stderr); err != nil {
